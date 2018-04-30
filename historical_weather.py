@@ -10,25 +10,31 @@ from datetime import datetime, timedelta
 
 import random
 
+import pandas as pd
+
+import numpy as np
 
 class Historical_Weather(object):
-    """A class queries historical weather at a list of coordinates
+    """The class queries historical weather at a list of coordinates
 
     """
 
     def __init__(self, coordinates, darksky_apikey,
+                 filename="weather_history.db",
                  sample_size=20,
                  sample_years=10,
                  sample_around_interval=None,
                  sample_current_date=None,
                  darkskyapi_calls_limit=900,
-                 darksky_units = "si",
-                 filename="weather_history.db"):
+                 darksky_units = "si"):
         """Initialise class
 
         :coordinates: list of coordinates
 
         :darksky_apikey: api key for darksky queries
+
+        :filename: filename of the sqlite database to use that stores
+        the historical weather
 
         :sample_size: number of days to query in the last sample_years
 
@@ -46,9 +52,6 @@ class Historical_Weather(object):
         to make per day
 
         :darkskyapi_units: units to query darksky data (see more in darksky)
-
-        :filename: filename of the sqlite database to use that stores
-        the historical weather
 
         """
         self.coordinates=coordinates
@@ -178,7 +181,7 @@ class Historical_Weather(object):
         # insert values to the database
         try:
             c.executemany('''
-            INSERT OR REPLACE INTO query_dates
+            INSERT OR IGNORE INTO query_dates
             (latitude, longitude, time, if_queried)
             VALUES (?,?,?,?)
             ''', days)
@@ -431,5 +434,16 @@ class Historical_Weather(object):
             self._dbconn.rollback()
             raise e
 
-        return query_res
+        # column names
+        if '*' == columns:
+            columns = ['id','latitude','longitude','time','summary','icon',
+                       'precipIntensity','precipProbability','precipType',
+                       'temperature','apparentTemperature','dewPoint','humidity',
+                       'pressure','windSpeed','windGust','windBearing',
+                       'cloudCover','uvIndex','visibility','ozone']
+        else:
+            columns = columns.split(",")
+
+        # convert to pandas
+        return pd.DataFrame(np.array(query_res),columns=columns)
 
