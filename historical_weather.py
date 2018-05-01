@@ -74,6 +74,9 @@ class Iter_Historical_Weather(object):
         m = self._times[self._times['date'] == self._dates[self.i]]['time'].min()
         M = self._times[self._times['date'] == self._dates[self.i]]['time'].max()
 
+        # increment i
+        self.i += 1
+
         return self.hw.query_local_weather(
             columns=columns,
             where="time >= " + str(m) + " AND time <= " + str(M))
