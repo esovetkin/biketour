@@ -147,6 +147,12 @@ class Historical_Weather(object):
             days = self._sample_days_to_query()
             self._save_query_dates_to_db(days)
 
+    def _get_db_columns(self):
+        return ['id','latitude','longitude','time','summary','icon',
+                'precipIntensity','precipProbability','precipType',
+                'temperature','apparentTemperature','dewPoint','humidity',
+                'pressure','windSpeed','windGust','windBearing',
+                'cloudCover','uvIndex','visibility','ozone']
 
     def _init_database(self):
         """This function initialised the database with weather data
@@ -209,7 +215,7 @@ class Historical_Weather(object):
         if self._sample_around_interval is None:
             delta=365
         else:
-            delta=self._sample_around_interval/2
+            delta=self._sample_around_interval//2
         if delta>365:
             delta=365
 
@@ -231,7 +237,7 @@ class Historical_Weather(object):
         days=[(self._sample_current_date - timedelta(days=x)).strftime("%s") for x in days_ago]
 
         # get a cross-product with coordinates
-        return [(x[0],x[1],y,False) for x in self.coordinates for y in days]
+        return [(x[0],x[1],y,False) for x in np.array(self.coordinates) for y in days]
 
 
     def _save_query_dates_to_db(self, days):
@@ -343,7 +349,7 @@ class Historical_Weather(object):
         """
         # TODO: to do not yet completely implemented
 
-        if self._darkskyapi_current_usage is not None and self._darkskyapi_calls_limit >= self._darkskyapi_calls_limit:
+        if self._darkskyapi_current_usage is not None and self._darkskyapi_current_usage >= self._darkskyapi_calls_limit:
             return False
 
         return True
@@ -374,7 +380,7 @@ class Historical_Weather(object):
             # TODO: verify here that result is not error
 
             # update the API usage counters
-            self._darkskyapi_current_usage = query_res.response_headers['X-Forecast-API-Calls']
+            self._darkskyapi_current_usage = int(query_res.response_headers['X-Forecast-API-Calls'])
             self._darkskyapi_timestamp = datetime.now()
 
         except Exception as e:
@@ -384,12 +390,7 @@ class Historical_Weather(object):
         # lsit with new data
         new_data=[]
         # list with expected columns
-        expected_columns = ['time','summary','icon',
-                            'precipIntensity','precipProbability','precipType',
-                            'temperature','apparentTemperature',
-                            'dewPoint','humidity','pressure',
-                            'windSpeed','windGust','windBearing',
-                            'cloudCover','uvIndex','visibility','ozone']
+        expected_columns = self._get_db_columns()[3:]
 
         for item in query_res['hourly']['data']:
 
@@ -415,21 +416,9 @@ class Historical_Weather(object):
             # insert new weather data
             c.executemany('''
             INSERT OR REPLACE INTO weather
-            (latitude, longitude,
-            time, summary, icon,
-            precipIntensity, precipProbability, precipType,
-            temperature, apparentTemperature,
-            dewPoint, humidity, pressure,
-            windSpeed, windGust, windBearing,
-            cloudCover, uvIndex, visibility, ozone)
+            (''' + ", ".join(self._get_db_columns()[1:]) + ''')
             VALUES
-            (?,?,
-            ?,?,?,
-            ?,?,?,
-            ?,?,
-            ?,?,?,
-            ?,?,?,
-            ?,?,?,?)
+            ('''+ ",".join("?"*len(self._get_db_columns()[1:])) + ''')
             ''', new_data)
 
             # update the query_dates table
@@ -455,27 +444,27 @@ class Historical_Weather(object):
         query_dates = self._read_query_dates_from_db(False)
 
         for q in query_dates:
+            print("Requests to make: " + str(self._count_query_dates_from_db(False)))
             try:
                 self._query_coordinate_time((q[1],q[2]), q[0])
             except Exception as e:
                 logging.warning("Error during queries",e)
                 break
 
-    def query_local_weather(self,columns=None,where=None):
+    def query_local_weather(self,columns='*',where=None):
         """Query weather data from local database
 
-        :columns: columns to query (in sql language). If None then all
-        columns are queried
+        :columns: columns to query (can be list or string in sql format).
 
         :where: where condition in terms of database column names and
         sql language
 
         """
+        # get column in a proper format
+        columns = ",".join(columns)
+
         # get cursor
         c = self._dbconn.cursor()
-
-        if columns is None:
-            columns = '*'
 
         # query data from the database
         try:
@@ -490,7 +479,7 @@ class Historical_Weather(object):
                 SELECT
                 ''' + columns + '''
                 FROM weather
-                WHERE''' + where)
+                WHERE ''' + where)
 
             query_res = c.fetchall()
 
@@ -501,11 +490,7 @@ class Historical_Weather(object):
 
         # column names
         if '*' == columns:
-            columns = ['id','latitude','longitude','time','summary','icon',
-                       'precipIntensity','precipProbability','precipType',
-                       'temperature','apparentTemperature','dewPoint','humidity',
-                       'pressure','windSpeed','windGust','windBearing',
-                       'cloudCover','uvIndex','visibility','ozone']
+            columns = self._get_db_columns()
         else:
             columns = columns.split(",")
 
