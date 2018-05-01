@@ -14,6 +14,71 @@ import pandas as pd
 
 import numpy as np
 
+class Iter_Historical_Weather(object):
+    """Iterator class that allows iterate over a sample of historical weather
+
+    """
+    def __init__(self, hist_weather):
+        """Initialise iterator for historical weather object
+
+        :hist_weather: Historical_Weather object
+
+        """
+        self.hw = hist_weather
+        self._init_iter_variables()
+
+
+    def __iter__(self):
+        return self
+
+
+    def _init_iter_variables(self):
+        """Get sampled weather times
+
+        """
+        # get cursor
+        c = self.hw._dbconn.cursor()
+
+        # query data from the database
+        try:
+            c.execute('''
+            SELECT DISTINCT time
+            FROM weather
+            ORDER BY time
+            ''')
+
+            self._times = pd.DataFrame(c.fetchall(),columns=['time'])
+        except Exception as e:
+            logging.error("Error quering data from weather table",e)
+            self.hw._dbconn.rollback()
+            raise e
+
+        self.hw._dbconn.commit()
+
+        self._times['datetime'] = self._times.apply(datetime.fromtimestamp,axis=1)
+        self._times['date'] = self._times['datetime'].apply(lambda x: (x.year,x.month,x.day))
+
+        self._dates = list(self._times['date'].drop_duplicates())
+        self.i = 0
+        self.n = len(self._dates)
+
+
+    def next(self, columns='*'):
+        """Return next weather in the sample
+
+        """
+        if self.i >= self.n:
+            raise StopIteration()
+
+        # get minimal and maximal time for this iteration
+        m = self._times[self._times['date'] == self._dates[self.i]]['time'].min()
+        M = self._times[self._times['date'] == self._dates[self.i]]['time'].max()
+
+        return self.hw.query_local_weather(
+            columns=columns,
+            where="time >= " + str(m) + " AND time <= " + str(M))
+
+
 class Historical_Weather(object):
     """The class queries historical weather at a list of coordinates
 
