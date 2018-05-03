@@ -63,7 +63,7 @@ class Iter_Historical_Weather(object):
         self.n = len(self._dates)
 
 
-    def next(self, columns='*'):
+    def __next__(self, columns='*'):
         """Return next weather in the sample
 
         """
@@ -383,7 +383,15 @@ class Historical_Weather(object):
             # TODO: verify here that result is not error
 
             # update the API usage counters
-            self._darkskyapi_current_usage = int(query_res.response_headers['X-Forecast-API-Calls'])
+            try:
+                self._darkskyapi_current_usage = int(query_res.response_headers['X-Forecast-API-Calls'])
+            except Exception as e:
+                logging.warning("X-Forecast-API-Calls is missing! Using only local information.")
+                if self._darkskyapi_current_usage is None:
+                    self._darkskyapi_current_usage = 1
+                else:
+                    self._darkskyapi_current_usage += 1
+
             self._darkskyapi_timestamp = datetime.now()
 
         except Exception as e:
