@@ -56,7 +56,11 @@ class Route(object):
         """Function tries to parse gpx file
 
         """
-        self._coordinates = []
+        # list to store coordinates
+        coordinates = []
+
+        # the point number
+        i = 0
 
         for tag in xml.etree.ElementTree.parse(self.filename).iter():
             ele=None
@@ -73,15 +77,20 @@ class Route(object):
                     if "name" in x.tag:
                         name=x.text
 
-                self._coordinates += [(lat,lon,ele,name)]
+                coordinates += [(i,lat,lon,ele,name)]
+                i+=1
 
             if "trkpt" in tag.tag:
                 lat=float(tag.attrib['lat'])
                 lon=float(tag.attrib['lon'])
 
-                self._coordinates += [(lat,lon,ele,name)]
+                coordinates += [(i,lat,lon,ele,name)]
+                i+=1
 
-        self._coordinates = pd.DataFrame(self._coordinates, columns=["latitude","longitude","elevation","name"])
+        self._coordinates = pd.DataFrame(coordinates,
+                                         columns=["point_no",
+                                                  "latitude","longitude",
+                                                  "elevation","name"])
 
         return self._coordinates
 
@@ -106,8 +115,7 @@ class Route(object):
         """Compute average coordinates
 
         """
-        return self._coordinates[['latitude','longitude','elevation','cluster']].groupby('cluster').mean()
-
+        return self._coordinates[['latitude','longitude','elevation','cluster']].groupby('cluster',as_index=False).mean()
 
     def get_coordinates(self):
         """Return coordinates
@@ -117,7 +125,6 @@ class Route(object):
             self._coordinates = self._parse_gpx()
 
         return self._coordinates
-
 
     def get_short_coordinates(self, method="average",max_distance=4000):
         """Get a shorter list of coordinates by clustering them together. This
@@ -136,3 +143,13 @@ class Route(object):
             self._short_coordinates = self._compute_average_from_cluster()
 
         return self._short_coordinates
+
+    def get_join_coordinates(self):
+        """Join coordinates and short coordinates together
+
+        TODO: all arguments are passed to get_short_coordinates
+
+        """
+        return pd.merge(self.get_coordinates(),
+                        self.get_short_coordinates(),
+                        on='cluster',suffixes=('','_short'))
