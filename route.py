@@ -10,6 +10,8 @@ import math
 
 import pandas as pd
 
+from helping_functions import geodesic_distance
+
 class Route(object):
     """A class that parses the xml route file and stores it in memory.
 
@@ -28,28 +30,6 @@ class Route(object):
         self.filename = gpx_path
         self._coordinates = None
         self._short_coordinates = None
-
-
-    def _geodesic_distance(self, coord1, coord2):
-        """Compute geodesic distance between two coordinates
-
-        NOTE: this function can be outside the class
-
-        :coord1: first coordinate
-        :coord2: second coordinate
-
-        """
-        # Earth radius
-        R = 6371000
-
-        # convert coordinates to radians
-        a = math.pi * np.array(coord1) / 180
-        b = math.pi * np.array(coord2) / 180
-
-        delta = (b - a)/2
-        t = math.cos(b[0]) * math.cos(a[0]) * math.sin(delta[1])**2 + math.sin(delta[0])**2
-
-        return R * 2 * math.atan2(t**(1/2),(1-t)**(1/2))
 
 
     def _parse_gpx(self):
@@ -106,7 +86,7 @@ class Route(object):
 
         """
         Z = linkage(self._coordinates[['latitude','longitude']],
-                    method=method,metric=self._geodesic_distance)
+                    method=method,metric=geodesic_distance)
 
         return fcluster(Z, max_distance, criterion='distance')
 
