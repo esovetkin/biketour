@@ -1,8 +1,8 @@
 #!/bin/env python
 
-from Forecast_Weather import Forecast_Weather
-from Historical_Weather import Historical_Weather
-from Route import Route
+from forecast_weather import Forecast_Weather
+from historical_weather import Historical_Weather
+from route import Route
 from physical_models import Plan_With_Wind, Plan_With_Constant_Speed, Plan_With_Wind_And_Elevation, Plan_With_Elevation
 
 import os
