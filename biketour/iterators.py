@@ -1,6 +1,7 @@
 #!/bin/env python
 
 import pandas as pd
+import datetime
 
 class Iter_Historical_Weather(object):
     """Iterator class that allows iterate over a sample of historical weather
@@ -43,7 +44,7 @@ class Iter_Historical_Weather(object):
 
         self.hw._dbconn.commit()
 
-        self._times['datetime'] = self._times.apply(datetime.fromtimestamp,axis=1)
+        self._times['datetime'] = self._times.apply(datetime.datetime.fromtimestamp,axis=1)
         self._times['date'] = self._times['datetime'].apply(lambda x: (x.year,x.month,x.day))
 
         self._dates = list(self._times['date'].drop_duplicates())
@@ -95,4 +96,4 @@ class Iter_Historical_Plan(object):
         """Return next plan
 
         """
-        return self.plan._compute_plan(self.ihw.next(columns = self.columns))
+        return self.plan._compute_plan(self.ihw.__next__(columns = self.columns))
