@@ -40,11 +40,7 @@ class Plan_With_Constant_Power(object):
         self.route = route
         self.hw = historical_weather
         self.wf = weather_forecast
-        self.ihp = Iter_Historical_Plan(self,
-                                        columns=['time',
-                                                 'latitude','longitude',
-                                                 'windSpeed','windBearing',
-                                                 'pressure','temperature','humidity'])
+        self.ihp = Iter_Historical_Plan(self)
 
         # parse kwargs for set parameters
         self._parse_kwargs(kwargs)
