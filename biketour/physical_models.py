@@ -12,6 +12,8 @@ import math
 
 import numpy as np
 
+import pandas as pd
+
 from pdb import set_trace as bp
 
 class Plan_With_Constant_Power(object):
@@ -90,8 +92,7 @@ class Plan_With_Constant_Power(object):
         res = weather[(x-x.min()).abs() < 1].copy()
 
         # select with closest coordinates
-        res['distance'] = [geodesic_distance(
-            (np.array(location.latitude)[0],np.array(location.longitude)[0]),x)
+        res['distance'] = [geodesic_distance((location.latitude,location.longitude),x)
                            for x in zip(res.latitude, res.longitude)]
         res = res.loc[res['distance'].idxmin()]
         res = res.drop(columns=['distance'])
@@ -228,7 +229,7 @@ class Plan_With_Constant_Power(object):
         # iterate through each location
         for k in route['point_no']:
             # get current location
-            l = route.loc[route['point_no'] == k]
+            l = route.loc[route['point_no'] == k].squeeze()
 
             # if starting point. Here we assume that at the start
             # point_no has value 0
@@ -247,10 +248,22 @@ class Plan_With_Constant_Power(object):
 
             plan += [(l,w,time)]
 
-        # convert plan to pandas
-
         # return plan
-        return plan
+        return self._convert_list_plan_to_pandas(plan)
+
+    def _convert_list_plan_to_pandas(self,plan):
+        """Convert plan list to pandas
+
+        The list consists of tuples: (location, weather, time)
+
+        """
+        res = []
+        for x in plan:
+            res += [pd.concat([x[0],
+                               x[1].rename(lambda x: "w_" + x),
+                               pd.Series(x[2]).rename(lambda x: "time")])]
+
+        return pd.concat(res,axis=1).transpose()
 
     def historical_plans(self):
         """Iterator through historical plans
