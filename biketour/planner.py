@@ -3,7 +3,7 @@
 from forecast_weather import Forecast_Weather
 from historical_weather import Historical_Weather
 from route import Route
-from physical_models import Plan_With_Wind, Plan_With_Constant_Speed, Plan_With_Wind_And_Elevation, Plan_With_Elevation
+from physical_models import Plan_With_Constant_Power
 
 import os
 
@@ -71,37 +71,9 @@ class Planner(object):
         coefficient (in Ns^2/m^2) (wind/elevation plans)
 
         """
-        if "with_wind" == plan_type:
-            return Plan_With_Wind(starting_time = kwargs["starting_time"],
-                                  route = self.route,
-                                  historical_weather = self.historical_weather,
-                                  weather_forecast = self.weather_forecast,
-                                  P_rider = kwargs["P_rider"], K = kwargs["K"])
-
-        if "with_constant_speed" == plan_type:
-            raise NotImplementedError
-
-            return Plan_With_Constant_Speed(starting_time = kwargs["starting_time"],
-                                            speed = kwargs["speed"],
+        if "with_constant_power" == plan_type:
+            return Plan_With_Constant_Power(starting_time = kwargs["starting_time"],
                                             route = self.route,
                                             historical_weather = self.historical_weather,
-                                            weather_forecast = self.weather_forecast)
-
-        if "with_wind_and_elevation" == plan_type:
-            raise NotImplementedError
-
-            return Plan_With_Wind_And_Elevation(
-                starting_time = kwargs["starting_time"],
-                route = self.route,
-                historical_weather = self.historical_weather,
-                weather_forecast = self.weather_forecast,
-                P_rider = kwargs["P_rider"], K = kwargs["K"])
-
-        if "with_elevation" == plan_type:
-            raise NotImplementedError
-
-            return Plan_With_Elevation(starting_time = kwargs["starting_time"],
-                                  route = self.route,
-                                  historical_weather = self.historical_weather,
-                                  weather_forecast = self.weather_forecast,
-                                  P_rider = kwargs["P_rider"], K = kwargs["K"])
+                                            weather_forecast = self.weather_forecast,
+                                            **kwargs)
