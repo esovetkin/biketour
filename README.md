@@ -55,7 +55,7 @@ The following physical parameters are used in the model:
    the bearings you have.
 
  + drivetrain efficiency. This parameter describes how efficient your
-   drivetrain. Assuming to be fixed along the trip.
+   drivetrain is. Assuming to be fixed along the trip.
 
 ## Weather data source
 
@@ -72,8 +72,8 @@ from Aachen to Calais in ~20000 query requests. That costs ~2 EUR.
 
 ## Accuracy of the model; those silly physical parameters
 
-It is not claim that model is gives accurate estimates for your
-journey longevity. But it should correlate with the true values.
+It is not claim that model gives accurate estimates for your journey
+longevity. But it should correlate with the true values.
 
 The accuracy of the model depends on the weather data accuracy and the
 accuracy of the physical parameters you have provided.
