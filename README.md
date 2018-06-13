@@ -106,9 +106,8 @@ is with respect to the observed historical weather distribution.
 Suggestions, critic (raise an issue) and pull requests are welcome!
 
 The program is written to satisfy my needs to ease my double century
-ride. Currently, it can be used only as a python library. There are
-not even a command-line interface is provided. However, this is
-planned in future.
+ride. Currently, it can be used only as a python library. There is
+even no command-line interface. However, this is planned in future.
 
 ## ToDO features:
 
