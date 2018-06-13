@@ -33,13 +33,13 @@ The following physical parameters are used in the model:
    have a powermeter and have no idea how rider power changes along
    the journey).
 
- + total mass of the rider in kg
+ + total mass of the rider in kg.
 
  + wind speed and wind bearing. The wind speed and direction is used
    to compute power needed to overcome the aerodynamic force.
 
    Here is used a simple model, assuming a fixed drag coefficient. In
-   reality, the drag coefficient should depend on wind
+   reality, the drag coefficient should depend on the wind
    direction. There are plans to extend the model that takes it into
    account.
 
@@ -93,13 +93,16 @@ take any gpx file. Elevation data is preferable, but not obligatory.
 
 The route from Aachen to Calais is approximately 228 miles. The
 queried historical weather data allows to compute the travel time
-plans. The trip longevity distribution is shown in the figure below.
+plans. The trip longevity distribution based on 500 historical data
+point is shown in the figure below. The historical weather is queried
+for 150 days of the summer months during the last 20 years.
 
 ![distribution of time required for the route](docs/aix-calais.png?raw=true)
 
-In order to decide which day to pick for a travel, I compute plans
-using the weather forecast for the next few days and see how good it
-is with respect to the observed historical weather distribution.
+Now, in order to decide which day to pick for a travel, I compute
+plans using the current weather forecast for the next few days and see
+how good it is with respect to the observed historical weather
+distribution.
 
 ## Suggestions and critic
 
