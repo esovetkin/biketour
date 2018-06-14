@@ -24,7 +24,7 @@ class Historical_Weather(object):
                  darksky_units = "si"):
         """Initialise class
 
-        :coordinates: list of coordinates
+        :coordinates: a pandas dataframe with latitude and longitude columns
 
         :darksky_apikey: api key for darksky queries
 
@@ -49,7 +49,7 @@ class Historical_Weather(object):
         :darkskyapi_units: units to query darksky data (see more in darksky)
 
         """
-        self.coordinates=coordinates
+        self.coordinates = np.squeeze(np.array(coordinates[['latitude','longitude']]))
         self.apikey=darksky_apikey
 
         self._sample_size=sample_size
@@ -115,7 +115,7 @@ class Historical_Weather(object):
             c.execute('''
             CREATE TABLE IF NOT EXISTS weather
             (
-            ''' + ", ".join(x[0] + " " + x[1] for x in self._get_db_schema().items()) +  '''
+            ''' + ", ".join(x[0] + " " + x[1] for x in self._get_db_schema().items()) +  ''',
             CONSTRAINT uc_time_latitude_longitude UNIQUE (time, latitude, longitude)
             )''')
 
