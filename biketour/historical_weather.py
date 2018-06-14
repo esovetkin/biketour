@@ -78,11 +78,32 @@ class Historical_Weather(object):
             self._save_query_dates_to_db(days)
 
     def _get_db_columns(self):
-        return ['id','latitude','longitude','time','summary','icon',
-                'precipIntensity','precipProbability','precipType',
-                'temperature','apparentTemperature','dewPoint','humidity',
-                'pressure','windSpeed','windGust','windBearing',
-                'cloudCover','uvIndex','visibility','ozone']
+        return list(self._get_db_schema().keys())
+
+    def _get_db_schema(self):
+        return {
+            'id':                  'INTEGER PRIMARY KEY AUTOINCREMENT',
+            'latitude':            'REAL NOT NULL',
+            'longitude':           'REAL NOT NULL',
+            'time':                'INTEGER NOT NULL',
+            'summary':             'VARCHAR(125)',
+            'icon':                'VARCHAR(125)',
+            'precipIntensity':     'REAL',
+            'precipProbability':   'REAL',
+            'precipType':          'VARCHAR(125)',
+            'temperature':         'REAL',
+            'apparentTemperature': 'REAL',
+            'dewPoint':            'REAL',
+            'humidity':            'REAL',
+            'pressure':            'REAL',
+            'windSpeed':           'REAL',
+            'windGust':            'REAL',
+            'windBearing':         'REAL',
+            'cloudCover':          'REAL',
+            'uvIndex':             'REAL',
+            'visibility':          'REAL',
+            'ozone':               'REAL',
+        }
 
     def _init_database(self):
         """This function initialised the database with weather data
@@ -94,27 +115,7 @@ class Historical_Weather(object):
             c.execute('''
             CREATE TABLE IF NOT EXISTS weather
             (
-            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-            latitude            REAL NOT NULL,
-            longitude           REAL NOT NULL,
-            time                INTEGER NOT NULL,
-            summary             VARCHAR(125),
-            icon                VARCHAR(125),
-            precipIntensity     REAL,
-            precipProbability   REAL,
-            precipType          VARCHAR(125),
-            temperature         REAL,
-            apparentTemperature REAL,
-            dewPoint            REAL,
-            humidity            REAL,
-            pressure            REAL,
-            windSpeed           REAL,
-            windGust            REAL,
-            windBearing         REAL,
-            cloudCover          REAL,
-            uvIndex             REAL,
-            visibility          REAL,
-            ozone               REAL,
+            ''' + ", ".join(x[0] + " " + x[1] for x in self._get_db_schema().items()) +  '''
             CONSTRAINT uc_time_latitude_longitude UNIQUE (time, latitude, longitude)
             )''')
 
@@ -331,20 +332,15 @@ class Historical_Weather(object):
         expected_columns = self._get_db_columns()[3:]
 
         for item in query_res['hourly']['data']:
-
-            # check presence of all columns in the query result
+            x = [coord[0],coord[1]]
             for col in expected_columns:
+                # check presence of all columns in the query result
                 if col not in item.keys():
-                    item[col] = None
+                    x += [None]
+                else:
+                    x += [item[col]]
 
-            # add queried data to list
-            new_data += [(coord[0],coord[1],
-                          item['time'],item['summary'],item['icon'],
-                          item['precipIntensity'],item['precipProbability'],item['precipType'],
-                          item['temperature'],item['apparentTemperature'],
-                          item['dewPoint'],item['humidity'],item['pressure'],
-                          item['windSpeed'],item['windGust'],item['windBearing'],
-                          item['cloudCover'],item['uvIndex'],item['visibility'],item['ozone'])]
+            new_data += [x]
 
         # get cursor
         c = self._dbconn.cursor()
