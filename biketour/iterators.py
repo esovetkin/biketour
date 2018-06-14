@@ -96,4 +96,11 @@ class Iter_Historical_Plan(object):
         """Return next plan
 
         """
-        return self.plan._compute_plan(self.ihw.__next__(columns = self.columns))
+        flag=True
+        while flag:
+            try:
+                res=self.plan._compute_plan(self.ihw.__next__(columns = self.columns))
+                flag=False
+            except TypeError as e:
+                continue
+        return res
